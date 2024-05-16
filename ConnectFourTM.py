@@ -18,11 +18,17 @@ CLICK_OPTION_SOUND = pygame.mixer.Sound("./Resources/Sounds/ClickOption.mp3")
 LOSS_SOUND = pygame.mixer.Sound("./Resources/Sounds/Loss.mp3")
 OPTION_SIZE = 45
 AI_DEPTH = 5
+GAMEMODE = {
+    1: "EASY",
+    3: "NORMAL",
+    5: "HARD"
+}
 players = [Human_Player(), AI_Player(Negamax(AI_DEPTH))]
 
 
 class GameController(TwoPlayerGame):
     def __init__(self, board=None):
+        global players
         self.players = players
         self.board = board if (board is not None) else np.array([[0 for _ in range(width)] for _ in range(height)])
         self.current_player = 1
@@ -82,6 +88,8 @@ class GameView:
         return pygame.font.Font("./Resources/Fonts/Crang.ttf", size)
 
     def menu_screen(self, Game):
+        global AI_DEPTH
+        global players
         while True:
             self.screen.fill(BG_COLOR)
             MENU_MOUSE_POS = pygame.mouse.get_pos()
@@ -89,16 +97,31 @@ class GameView:
             text_rect = paused_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 // 3))
             self.screen.blit(paused_text, text_rect)
 
-            PLAY_BUTTON = Button(pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2.8),
-                                 text_input="PLAY", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR, hovering_color="White")
-            QUIT_BUTTON = Button(pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.5),
-                                 text_input="QUIT", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR, hovering_color="White")
+            difficult_text = self.get_font(OPTION_SIZE).render(GAMEMODE[AI_DEPTH], True, BASE_COLOR)
+            text_rect = difficult_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
+            self.screen.blit(difficult_text, text_rect)
 
-            GUIDE_BUTTON = Button(pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
-                                 text_input="GUIDE", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
+            INCREASE_BUTTON = Button(pos=(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 - 100),
+                                     text_input="<", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
+                                     hovering_color="White")
+
+            DECREASE_BUTTON = Button(pos=(SCREEN_WIDTH // 2 + 150, SCREEN_HEIGHT // 2 - 100),
+                                     text_input=">", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
+                                     hovering_color="White")
+
+            PLAY_BUTTON = Button(pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
+                                 text_input="PLAY", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
                                  hovering_color="White")
 
-            for button in [PLAY_BUTTON, GUIDE_BUTTON, QUIT_BUTTON]:
+            GUIDE_BUTTON = Button(pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100),
+                                  text_input="GUIDE", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
+                                  hovering_color="White")
+
+            QUIT_BUTTON = Button(pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 200),
+                                 text_input="QUIT", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
+                                 hovering_color="White")
+
+            for button in [INCREASE_BUTTON, DECREASE_BUTTON, PLAY_BUTTON, GUIDE_BUTTON, QUIT_BUTTON]:
                 button.changeColor(MENU_MOUSE_POS)
                 button.update(self.screen)
 
@@ -107,8 +130,15 @@ class GameView:
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    if INCREASE_BUTTON.checkForInput(MENU_MOUSE_POS):
                         CLICK_OPTION_SOUND.play()
+                        AI_DEPTH = AI_DEPTH > 1 and AI_DEPTH - 2 or AI_DEPTH
+                    elif DECREASE_BUTTON.checkForInput(MENU_MOUSE_POS):
+                        CLICK_OPTION_SOUND.play()
+                        AI_DEPTH = AI_DEPTH < 5 and AI_DEPTH + 2 or AI_DEPTH
+                    elif PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
+                        CLICK_OPTION_SOUND.play()
+                        players = [Human_Player(), AI_Player(Negamax(AI_DEPTH))]
                         Game.play_game()
                     elif GUIDE_BUTTON.checkForInput(MENU_MOUSE_POS):
                         CLICK_OPTION_SOUND.play()
@@ -142,8 +172,8 @@ class GameView:
                 self.screen.blit(text_surface, text_rect)
 
             BACK_BUTTON = Button(pos=(SCREEN_WIDTH // 10, SCREEN_HEIGHT // 20),
-                                  text_input="BACK TO MENU", font=self.get_font(20), base_color=BASE_COLOR,
-                                  hovering_color="White")
+                                 text_input="BACK TO MENU", font=self.get_font(20), base_color=BASE_COLOR,
+                                 hovering_color="White")
 
             for button in [BACK_BUTTON]:
                 button.changeColor(MENU_MOUSE_POS)
@@ -208,8 +238,8 @@ class GameView:
             self.screen.blit(win_text, text_rect)
 
             NEW_GAME_BUTTON = Button(pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2.8),
-                                 text_input="NEW GAME", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
-                                 hovering_color=WHITE)
+                                     text_input="NEW GAME", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
+                                     hovering_color=WHITE)
             BACK_BUTTON = Button(pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.8),
                                  text_input="BACK TO MENU", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
                                  hovering_color=WHITE)
@@ -243,8 +273,8 @@ class GameView:
             self.screen.blit(paused_text, text_rect)
 
             RESUME_BUTTON = Button(pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2.8),
-                                     text_input="RESUME", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
-                                     hovering_color=WHITE)
+                                   text_input="RESUME", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
+                                   hovering_color=WHITE)
             BACK_BUTTON = Button(pos=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 1.8),
                                  text_input="BACK TO MENU", font=self.get_font(OPTION_SIZE), base_color=BASE_COLOR,
                                  hovering_color=WHITE)
@@ -276,6 +306,7 @@ class Game:
 
     def play_game(self):
         self.view.draw_grid(self.controller.board)
+        self.controller.reset()
         running = True
         while running:
             for event in pygame.event.get():
